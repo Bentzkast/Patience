@@ -4,6 +4,7 @@
             "name": "Linux",
             "includePath": [
                 "/usr/include/SDL2",
+                "/usr/include/freetype2",
                 "./external/GLAD/include",
                 "./external/stbimage"
             ],

@@ -199,6 +199,12 @@ int main(int argc, char* argv[])
 
 		Resources::DrawMesh(deltaTime);
 
+		glDisable(GL_DEPTH_TEST);
+		glEnable(GL_BLEND);
+		//glEnable(GL_CULL_FACE);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		Resources::DrawText();
+
 		SDL_GL_SwapWindow(g_applicationState.sdlWindow);
 		realTickElapsed = SDL_GetTicks();
 	}

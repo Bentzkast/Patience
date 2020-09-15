@@ -39,9 +39,6 @@ namespace std {
 
 namespace PTC_Mesh
 {
-
-
-
 	static Mesh CreateMesh(
 		const float vertices[], const Uint32 vertCount,
 		const Uint32 indices[], const Uint32 indicesCount)
@@ -66,14 +63,14 @@ namespace PTC_Mesh
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesCount * sizeof(Uint32), indices, GL_STATIC_DRAW);
 
 		// Give data to the vertex shader
-		const int totalDataSizeBytes = 8 * sizeof(float); // Stride
+		const int totalStrideBytes = 8 * sizeof(float); // Stride
 
 		// Position
 		{
 			constexpr int posAttrIndex = 0;
 			constexpr int posDataCount = 3;
 			constexpr int posAttrOffsetBytes = 0;
-			glVertexAttribPointer(posAttrIndex, posDataCount, GL_FLOAT, GL_FALSE, totalDataSizeBytes, (void*)posAttrOffsetBytes);
+			glVertexAttribPointer(posAttrIndex, posDataCount, GL_FLOAT, GL_FALSE, totalStrideBytes, (void*)posAttrOffsetBytes);
 			glEnableVertexAttribArray(posAttrIndex);
 		}
 		// Normal
@@ -81,7 +78,7 @@ namespace PTC_Mesh
 			constexpr int normalAttrIndex = 1;
 			constexpr int normalDataCount = 3;
 			constexpr int normalAttrOffSetBytes = 3 * sizeof(float);
-			glVertexAttribPointer(normalAttrIndex, normalDataCount, GL_FLOAT, GL_FALSE, totalDataSizeBytes, (void*)normalAttrOffSetBytes);
+			glVertexAttribPointer(normalAttrIndex, normalDataCount, GL_FLOAT, GL_FALSE, totalStrideBytes, (void*)normalAttrOffSetBytes);
 			glEnableVertexAttribArray(normalAttrIndex);
 		}
 		// Texture
@@ -92,7 +89,7 @@ namespace PTC_Mesh
 			glVertexAttribPointer(
 				textureAttrIndex, textureDataSize,
 				GL_FLOAT, GL_FALSE,
-				totalDataSizeBytes,
+				totalStrideBytes,
 				(void*)textureAttrOffsetBytes);
 			glEnableVertexAttribArray(textureAttrIndex);
 		}
@@ -107,7 +104,7 @@ namespace PTC_Mesh
 		};
 	}
 
-		static bool LoadMeshFromObjFile(const char* filePath, Mesh& outMesh)
+	static bool LoadMeshFromObjFile(const char* filePath, Mesh& outMesh)
 	{
 		std::vector<glm::vec3> vertices;
 		std::vector<glm::vec3> normals;
@@ -216,6 +213,34 @@ namespace PTC_Mesh
 
 } // namespace PTC_Mesh
 
+void Shader::Select() const
+{
+	glUseProgram(this->finalShaderHandle);
+}
+
+bool Shader::Set3fUniform(const char* name, glm::vec3 value) const
+{
+	GLint loc = glGetUniformLocation(this->finalShaderHandle, name);
+	// Send the matrix data to the uniform
+	if (loc != -1)
+	{
+		glUniform3f(loc, value.x, value.y, value.z);
+		return false;
+	}
+	return true;
+}
+
+bool Shader::SetMatrixUniform(const char* name, const glm::mat4& matrix) const
+{
+	GLint loc = glGetUniformLocation(this->finalShaderHandle, name);
+	// Send the matrix data to the uniform
+	if (loc != -1)
+	{
+		glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(matrix));
+		return false;
+	}
+	return true;
+}
 
 namespace PTC_Shader
 {
@@ -301,20 +326,7 @@ namespace PTC_Shader
 		glDeleteShader(shader.fragmentShaderHandle);	
 	}
 
-	static void UseShader(const Shader& shader)
-	{
-		glUseProgram(shader.finalShaderHandle);
-	}
 
-	static void SetMatrixUniform(const Shader& shader, const char* name, const glm::mat4& matrix)
-	{
-		GLint loc = glGetUniformLocation(shader.finalShaderHandle, name);
-		// Send the matrix data to the uniform
-		if (loc != -1)
-		{
-			glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(matrix));
-		}
-	}
 }
 
 
@@ -390,8 +402,16 @@ namespace Resources {
 			"asset/shader/vertex_basic.vert",
 			"asset/shader/frag_basic.frag",g_resources.flatShader))
 			{
-				SDL_Log("Failed to load Shader");
+				SDL_Log("Failed to load flat Shader");
 			}
+
+		if(!PTC_Shader::LoadFinalShader(
+			"asset/shader/text.vert",
+			"asset/shader/text.frag",g_resources.textShader))
+			{
+				SDL_Log("Failed to load text Shader");
+			}
+
 
 		if(!PTC_Texture::CreateTexture(
 			"asset/texture/Simple.png", g_resources.paletteTexture
@@ -419,23 +439,24 @@ namespace Resources {
 		}
 
 		g_resources.rotation = 0;
+		g_resources.textRenderer.Initialize();
 	}
 
 	void DrawMesh(float dt)
 	{
-		{
-			glm::mat4 transform = glm::scale(glm::mat4(1.0f), glm::vec3(64.0f,64.0f, 1.0f));
-			glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -10.0f));
-			glm::mat4 projectionScreen = glm::ortho(0.0f, 1080.0f, 0.0f, 720.0f, 0.1f, 100.0f);
+		// {
+		// 	glm::mat4 transform = glm::scale(glm::mat4(1.0f), glm::vec3(64.0f,64.0f, 1.0f));
+		// 	glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -10.0f));
+		// 	glm::mat4 projectionScreen = glm::ortho(0.0f, 1080.0f, 0.0f, 720.0f, 0.1f, 100.0f);
 
-			glm::mat4 screenFinal = projectionScreen * view * transform;
+		// 	glm::mat4 screenFinal = projectionScreen * view * transform;
 
-			PTC_Shader::UseShader(g_resources.flatShader);
-			PTC_Shader::SetMatrixUniform(g_resources.flatShader,"transform", screenFinal);
-			PTC_Texture::SelectTexture(g_resources.paletteTexture);
-			PTC_Mesh::SelectMesh(g_resources.quadMesh);
-			PTC_Mesh::DrawMesh(g_resources.quadMesh);
-		}
+		// 	g_resources.flatShader.Select();
+		// 	g_resources.flatShader.SetMatrixUniform("transform", screenFinal);
+		// 	PTC_Texture::SelectTexture(g_resources.paletteTexture);
+		// 	PTC_Mesh::SelectMesh(g_resources.quadMesh);
+		// 	PTC_Mesh::DrawMesh(g_resources.quadMesh);
+		// }
 
 		{
 			g_resources.rotation += dt * 10.0f;
@@ -444,15 +465,24 @@ namespace Resources {
 			//view = glm::rotate(view, glm::radians(45.f), glm::vec3(1.0f, 0.0f, 0.0f));
 			glm::mat4 projection = glm::perspective(glm::radians(60.0f), 1080.0f / 720.0f, 0.1f, 200.0f);
 			glm::mat4 final = projection * view * transform;
-			PTC_Shader::UseShader(g_resources.flatShader);
-			PTC_Shader::SetMatrixUniform(g_resources.flatShader,"transform", final);
+			g_resources.flatShader.Select();
+			g_resources.flatShader.SetMatrixUniform("transform", final);
 			PTC_Texture::SelectTexture(g_resources.paletteTexture);
 			PTC_Mesh::SelectMesh(g_resources.cubeMesh);
 			PTC_Mesh::DrawMesh(g_resources.cubeMesh);
 
 			//std::cout << glm::to_string(g_resources.temp);
 		}
-		
+	}
+
+	void DrawText()
+	{
+		std::string sampleText { "This is sample text" };
+		g_resources.textRenderer.RenderText(
+			g_resources.textShader,
+			sampleText,
+			25.0f, 25.0f, 1.0f,
+			{ 0.3, 0.7 , 0.9 });
 	}
 
 	void FreeResources()
@@ -461,5 +491,6 @@ namespace Resources {
 		PTC_Mesh::FreeMesh(g_resources.cubeMesh);
 		PTC_Shader::FreeShader(g_resources.flatShader);
 		PTC_Texture::FreeTexture(g_resources.paletteTexture);
+		g_resources.textRenderer.Free();
 	}
 }
