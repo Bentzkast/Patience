@@ -18,13 +18,6 @@ struct ApplicationState
 	bool isRunning;
 };
 
-struct GameState
-{
-	void* memory;
-	u64 used;
-	u64 size;
-};
-
 struct Mesh
 {
 	u32 vertexArrayHandle;
@@ -40,14 +33,14 @@ struct Mesh
 	// Function
 	// Pos(2) Texture(2)
 	static Mesh CreateSimple2D(
-		const float vertices[], const Uint32 vertCount,
-		const Uint32 indices[], const Uint32 indicesCount
+		const float vertices[], const u32 vertCount,
+		const u32 indices[], const u32 indicesCount
 	);
 
 	// Pos(3) Normal(3) Texture(2)
 	static Mesh CreateMesh3D(
-		const float vertices[], const Uint32 vertCount,
-		const Uint32 indices[], const Uint32 indicesCount);
+		const float vertices[], const u32 vertCount,
+		const u32 indices[], const u32 indicesCount);
 	
 	static bool LoadMeshFromObjFile(const char* filePath, Mesh& outMesh);
 };
@@ -85,6 +78,7 @@ struct Texture
 	static bool CreateTexture(const char* texturePath, Texture& outTexture);
 };
 
+// Think about hiding this later...
 struct Character
 {
 	u32 textureHandle; 		// Id handle of the glyph texture
@@ -93,28 +87,16 @@ struct Character
 	u32 advance;			// offset to advance to the next gylph
 };
 
-
 constexpr u32 characterCount { 128 };
 class TextRenderer
 {
-	Character characterTable[characterCount];
+	struct Character characterTable[characterCount];
 	glm::mat4 projection;
 	Mesh textMesh;
 public:
 	bool Initialize();
 	void RenderText(Shader& shader, std::string& text, float x, float y, float scale, glm::vec3 color);
 	void Free();
-};
-
-struct GameResources
-{
-	Mesh quadMesh;
-	Mesh cubeMesh;
-	Shader flatShader;
-	Shader textShader;
-	Texture paletteTexture;
-	float rotation;
-	TextRenderer textRenderer;
 };
 
 struct Player
@@ -130,13 +112,26 @@ struct PlayerActionTable
 	const PlayerAction* action;
 };
 
-// Interface Should be a class
-namespace Resources
+// Interface Should be a class, class should never have public field
+// use POD instead for all public so all public or all private
+class Resources
 {
+	Mesh quadMesh;
+	Mesh cubeMesh;
+	Shader flatShader;
+	Shader textShader;
+	Texture paletteTexture;
+	float rotation;
+	TextRenderer textRenderer;
+public:
 	void InitResources();
 	void FreeResources();
 	void DrawMesh(float dt);
 	void DrawText();
-}
+};
 
 
+struct GameState
+{
+	Resources* resources;
+};

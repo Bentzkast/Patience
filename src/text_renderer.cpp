@@ -14,14 +14,14 @@ bool TextRenderer::Initialize()
 	}
 
 	FT_Face face;
-	if(FT_New_Face(ft, "asset/font/arial.ttf", 0, &face))
+	if(FT_New_Face(ft, "asset/font/MonospaceTypewriter.ttf", 0, &face))
 	{
 		SDL_Log("Failed to load Font");
 		return false;
 	}
 
 	constexpr i32 dynamicWidth { 0 };
-	constexpr i32 height { 48 };
+	constexpr i32 height { 24 };
 	FT_Set_Pixel_Sizes( face , dynamicWidth , height );
 
 	// DISABLE byte alightment restriction
@@ -78,8 +78,8 @@ bool TextRenderer::Initialize()
 		0.0f, 	0.0f, 	0.0f, 	1.0f  // bottom left
 	};
 	Uint32 quadIndices[] = {
-		0, 1, 2,
-		2, 3, 0,
+		2, 1, 0,
+		0, 3, 2,
 	};
 	
 	textMesh = Mesh::CreateSimple2D(quadVertices, 16, quadIndices, 6);

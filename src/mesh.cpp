@@ -23,8 +23,8 @@ void Mesh::Free() const
 }
 
 Mesh Mesh::CreateSimple2D(
-	const float vertices[], const Uint32 vertCount,
-	const Uint32 indices[], const Uint32 indicesCount)
+	const float vertices[], const u32 vertCount,
+	const u32 indices[], const u32 indicesCount)
 {
 	u32 vertexArrayHandle { 0 };
 	u32 vertexBufferHandle { 0 };
@@ -69,8 +69,8 @@ Mesh Mesh::CreateSimple2D(
 }
 
 Mesh Mesh::CreateMesh3D(
-	const float vertices[], const Uint32 vertCount,
-	const Uint32 indices[], const Uint32 indicesCount)
+	const float vertices[], const u32 vertCount,
+	const u32 indices[], const u32 indicesCount)
 {
 	u32 vertexArrayHandle { 0 };
 	u32 vertexBufferHandle { 0 };

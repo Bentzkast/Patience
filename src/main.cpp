@@ -12,16 +12,8 @@ void MovePlayer(Player *player)
 
 PlayerActionTable playerActionTable[] =
 	{
-		{"Move", MovePlayer}};
-
-static Player *PushPlayer(GameState *gamestate, int x, int y)
-{
-	Player *player = (Player *)gamestate->memory;
-	player->x = x;
-	player->y = y;
-	gamestate->used += sizeof(*player);
-	return player;
-}
+		{"Move", MovePlayer}
+	};
 
 static int ShutDown()
 {
@@ -146,12 +138,16 @@ int main(int argc, char *argv[])
 	}
 
 	// Game State
-	Resources::InitResources();
+	g_gameState.resources = new Resources();
+	g_gameState.resources->InitResources();
 
 	// Game Runs!
 	u32 realTickElapsed = SDL_GetTicks();
 	constexpr float deltaTimeLimit = 0.05f;
 	g_applicationState.isRunning = true;
+
+	glEnable(GL_MULTISAMPLE); // AA?
+	glEnable(GL_CULL_FACE); // Face culling
 	while (g_applicationState.isRunning)
 	{
 		PollEvent();
@@ -171,7 +167,6 @@ int main(int argc, char *argv[])
 		}
 
 		// Tick here
-		glEnable(GL_MULTISAMPLE); // AA?
 
 		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -182,19 +177,19 @@ int main(int argc, char *argv[])
 
 		glDepthFunc(GL_LESS);
 
-		Resources::DrawMesh(deltaTime);
+		g_gameState.resources->DrawMesh(deltaTime);
 
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
-		//glEnable(GL_CULL_FACE);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		Resources::DrawText();
+		g_gameState.resources->DrawText();
 
 		SDL_GL_SwapWindow(g_applicationState.sdlWindow);
 		realTickElapsed = SDL_GetTicks();
 	}
 
-	Resources::FreeResources();
+	g_gameState.resources->FreeResources();
+	delete g_gameState.resources;
 
 	return ShutDown();
 }
