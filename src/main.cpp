@@ -1,24 +1,22 @@
 #include "main.h"
 #include <glad/glad.h>
 
-static GameState g_gameState = { 0 };
-static ApplicationState g_applicationState = { 0 };
+static GameState g_gameState = {0};
+static ApplicationState g_applicationState = {0};
 
-
-void MovePlayer(Player* player)
+void MovePlayer(Player *player)
 {
 	SDL_Log("Player Moved to new location");
 	player->x += 1;
 }
 
-PlayerActionTable playerActionTable[] = 
-{
-	{"Move", MovePlayer}
-};
+PlayerActionTable playerActionTable[] =
+	{
+		{"Move", MovePlayer}};
 
-static Player* PushPlayer(GameState* gamestate, int x, int y)
+static Player *PushPlayer(GameState *gamestate, int x, int y)
 {
-	Player* player = (Player*)gamestate->memory;
+	Player *player = (Player *)gamestate->memory;
 	player->x = x;
 	player->y = y;
 	gamestate->used += sizeof(*player);
@@ -31,38 +29,39 @@ static int ShutDown()
 	SDL_DestroyWindow(g_applicationState.sdlWindow);
 	SDL_QuitSubSystem(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
 	SDL_Quit();
-	free(g_gameState.memory);
 	return 0;
 }
 
 static void PollEvent()
 {
-	SDL_Event event = { 0 };
+	SDL_Event event = {0};
 	while (SDL_PollEvent(&event))
 	{
 		switch (event.type)
 		{
-			case SDL_KEYDOWN:
-			{
-				if (event.key.keysym.sym == SDLK_ESCAPE)
-				{
-					g_applicationState.isRunning = false;
-				}
-				if (event.key.keysym.sym == SDLK_F1)
-				{
-					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-				}
-				if (event.key.keysym.sym == SDLK_F2)
-				{
-					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-				}
-			} break;
-			case SDL_QUIT: // X top right
+		case SDL_KEYDOWN:
+		{
+			if (event.key.keysym.sym == SDLK_ESCAPE)
 			{
 				g_applicationState.isRunning = false;
-			} break;
-			default:
-				break;
+			}
+			if (event.key.keysym.sym == SDLK_F1)
+			{
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			}
+			if (event.key.keysym.sym == SDLK_F2)
+			{
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			}
+		}
+		break;
+		case SDL_QUIT: // X top right
+		{
+			g_applicationState.isRunning = false;
+		}
+		break;
+		default:
+			break;
 		}
 	}
 }
@@ -91,25 +90,19 @@ static void SetOpenGlAttributes()
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 }
 
-
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
-	// Allocate Memory
-	g_gameState.memory = malloc(1024);
-	memset(g_gameState.memory, 0, 1024);
-	g_gameState.size = 1024;
-
 	// Setup Window Context
 	// Load from file later
-	g_applicationState.windowWidth = 1080; 
+	g_applicationState.windowWidth = 1080;
 	g_applicationState.windowHeight = 720;
 
 	// Initialize SDL
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO))
-    {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, " Tea::CreateContext::SDL_Init : %s.", SDL_GetError());
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO))
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, " Tea::CreateContext::SDL_Init : %s.", SDL_GetError());
 		return ShutDown();
-    }
+	}
 
 	SetOpenGlAttributes();
 
@@ -117,11 +110,11 @@ int main(int argc, char* argv[])
 	{
 		g_applicationState.sdlWindow = SDL_CreateWindow(
 			"Tea Engine", // Window title
-			100,	// Top left x-coordinate of window
-			100,	// Top left y-coordinate of window
-			g_applicationState.windowWidth,	
+			100,		  // Top left x-coordinate of window
+			100,		  // Top left y-coordinate of window
+			g_applicationState.windowWidth,
 			g_applicationState.windowHeight,
-			SDL_WINDOW_OPENGL		// Flags (0 for no flags set)
+			SDL_WINDOW_OPENGL // Flags (0 for no flags set)
 		);
 
 		if (!g_applicationState.sdlWindow)
@@ -154,25 +147,17 @@ int main(int argc, char* argv[])
 
 	// Game State
 	Resources::InitResources();
-	// Player* p = PushPlayer(&g_gameState, 20, 20);
-
-	// SDL_Log("Player is spawned at (%d, %d)", p->x, p->y);
-	// SDL_Log("Memory usage is %lu/%lu", g_gameState.used, g_gameState.size);
-
-	// playerActionTable[0].action(p);
-	
-	// SDL_Log("Player is now at (%d, %d)", p->x, p->y);
-
 
 	// Game Runs!
 	u32 realTickElapsed = SDL_GetTicks();
 	constexpr float deltaTimeLimit = 0.05f;
 	g_applicationState.isRunning = true;
-	while(g_applicationState.isRunning)
+	while (g_applicationState.isRunning)
 	{
 		PollEvent();
 
-		while (!SDL_TICKS_PASSED(SDL_GetTicks(), realTickElapsed + 16)) {
+		while (!SDL_TICKS_PASSED(SDL_GetTicks(), realTickElapsed + 16))
+		{
 			if (!SDL_TICKS_PASSED(SDL_GetTicks(), realTickElapsed + 17))
 			{
 				SDL_Delay(1);
