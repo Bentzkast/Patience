@@ -1,7 +1,9 @@
 #pragma once
 #include <SDL2/SDL.h>
-#include "../external/glm/glm.hpp"
+#include <glm/glm.hpp>
 #include <string>
+#include <glad/glad.h>
+
 typedef uint64_t u64;
 typedef uint32_t u32;
 typedef int i32;
@@ -30,24 +32,57 @@ struct Mesh
 	u32 elementBufferHandle;
 	u32 vertexArrayCount;
 	u32 elementBufferCount;  
+
+	void Select() const;
+	void Draw() const;
+	void Free() const;
+
+	// Function
+	// Pos(2) Texture(2)
+	static Mesh CreateSimple2D(
+		const float vertices[], const Uint32 vertCount,
+		const Uint32 indices[], const Uint32 indicesCount
+	);
+
+	// Pos(3) Normal(3) Texture(2)
+	static Mesh CreateMesh3D(
+		const float vertices[], const Uint32 vertCount,
+		const Uint32 indices[], const Uint32 indicesCount);
+	
+	static bool LoadMeshFromObjFile(const char* filePath, Mesh& outMesh);
 };
 
 struct Shader
 {
+	// Field
 	u32 vertexShaderHandle;
 	u32 fragmentShaderHandle;
 	u32 finalShaderHandle;
-
+	
+	// Method
 	void Select() const;
 	bool Set3fUniform(const char* name, glm::vec3 value) const; 
 	bool SetMatrixUniform(const char* name, const glm::mat4& matrix) const;
+	void Free() const;
+
+	// Function
+	static bool LoadSingleShader(const char* filepath, GLenum shaderType, Uint32& outHandle);
+	static bool LoadFinalShader(const char* vertexPath, const char* fragPath, Shader& outShader);
 };
 
 struct Texture
 {
+	// Field
 	u32 handle;
 	u32 width;
 	u32 height;
+
+	// Method
+	void Free() const;
+	void Select() const;
+
+	// Function
+	static bool CreateTexture(const char* texturePath, Texture& outTexture);
 };
 
 struct Character
@@ -64,7 +99,7 @@ class TextRenderer
 {
 	Character characterTable[characterCount];
 	glm::mat4 projection;
-	u32 vertexArrayHandle, vertexBufferHandle, elementBufferHandle;
+	Mesh textMesh;
 public:
 	bool Initialize();
 	void RenderText(Shader& shader, std::string& text, float x, float y, float scale, glm::vec3 color);

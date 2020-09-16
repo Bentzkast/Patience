@@ -3,6 +3,7 @@
         {
             "name": "Linux",
             "includePath": [
+                "/usr/include/SDL2",
                 "./include",
                 "./external/GLAD/include",
                 "./external/stbimage"

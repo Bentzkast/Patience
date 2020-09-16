@@ -28,7 +28,7 @@ debug-build-window:
 	-lSDL2;
 
 run:
-	./game
+	./target/linux/game
 
 run-window:
 	target/window/game.exe
@@ -37,4 +37,4 @@ clean-window:
 	rm target/window/game.exe
 
 clean:
-	rm ./game;
+	rm ./target/linux/game;
