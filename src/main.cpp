@@ -24,9 +24,12 @@ static int ShutDown()
 	return 0;
 }
 
+static Mouse g_mouse;
+
 static void PollEvent()
 {
 	SDL_Event event = {0};
+	g_mouse.click = false;
 	while (SDL_PollEvent(&event))
 	{
 		switch (event.type)
@@ -44,6 +47,21 @@ static void PollEvent()
 			if (event.key.keysym.sym == SDLK_F2)
 			{
 				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			}
+		}
+		case SDL_MOUSEBUTTONDOWN:
+		{
+			if(event.button.button == SDL_BUTTON_LEFT)
+			{
+				Mouse mouse { event.button.x, event.button.y };
+				g_mouse.x = event.button.x;
+				g_mouse.y = event.button.y;
+				SDL_Log("Left Click %d %d", mouse.x, mouse.y);
+				g_mouse.click = true;
+			}
+			if(event.button.button == SDL_BUTTON_RIGHT)
+			{
+				SDL_Log("Right Click");
 			}
 		}
 		break;
@@ -101,7 +119,7 @@ int main(int argc, char *argv[])
 	// Init Window
 	{
 		g_applicationState.sdlWindow = SDL_CreateWindow(
-			"Tea Engine", // Window title
+			"Patience Engine", // Window title
 			100,		  // Top left x-coordinate of window
 			100,		  // Top left y-coordinate of window
 			g_applicationState.windowWidth,
@@ -177,12 +195,12 @@ int main(int argc, char *argv[])
 
 		glDepthFunc(GL_LESS);
 
-		g_gameState.resources->DrawMesh(deltaTime);
+		g_gameState.resources->DrawMesh(deltaTime, g_mouse);
 
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		g_gameState.resources->DrawText();
+		g_gameState.resources->DrawText(g_mouse);
 
 		SDL_GL_SwapWindow(g_applicationState.sdlWindow);
 		realTickElapsed = SDL_GetTicks();

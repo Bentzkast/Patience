@@ -88,14 +88,19 @@ struct Character
 };
 
 constexpr u32 characterCount { 128 };
-class TextRenderer
+class UIRenderer
 {
 	struct Character characterTable[characterCount];
 	glm::mat4 projection;
-	Mesh textMesh;
+	Mesh uiMesh;
+	u32 charHeight;
+	i32 windowWidth;
+	i32 windowHeight;
 public:
-	bool Initialize();
-	void RenderText(Shader& shader, std::string& text, float x, float y, float scale, glm::vec3 color);
+	bool Initialize(i32 width, i32 height);
+	void SetWindowSize(i32 width, i32 height);
+	void RenderText(const Shader& shader, std::string& text, float x, float y, float scale, glm::vec3 color);
+	void RenderPanel(const Shader& shader,const Texture& texture, const SDL_Rect& rect, glm::vec3 color);
 	void Free();
 };
 
@@ -112,24 +117,32 @@ struct PlayerActionTable
 	const PlayerAction* action;
 };
 
+struct Mouse{
+	int x;
+	int y;
+	bool click;
+};
+
 // Interface Should be a class, class should never have public field
 // use POD instead for all public so all public or all private
 class Resources
 {
-	Mesh quadMesh;
 	Mesh cubeMesh;
+	Mesh treeMesh;
+
 	Shader flatShader;
 	Shader textShader;
+
 	Texture paletteTexture;
-	float rotation;
-	TextRenderer textRenderer;
+	Texture panelTexture;
+
+	UIRenderer textRenderer;
 public:
 	void InitResources();
 	void FreeResources();
-	void DrawMesh(float dt);
-	void DrawText();
+	void DrawMesh(float dt, const Mouse& mouse);
+	void DrawText(const Mouse& mouse);
 };
-
 
 struct GameState
 {

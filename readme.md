@@ -1,1 +1,4 @@
-need to try to compile on window!!
+next terrain generation
+basic grid,
+start gameplay asap
+event / action pipelines
