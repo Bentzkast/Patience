@@ -35,7 +35,7 @@ void Resources::InitResources()
 		SDL_Log("Failed to load Panel Texture");
 	}
 
-	if(!Mesh::LoadMeshFromObjFile("asset/mesh/CubeSplit.obj", this->cubeMesh))
+	if(!Mesh::LoadMeshFromObjFile("asset/mesh/Quad.obj", this->quadMesh))
 	{
 		SDL_Log("Failed to load cube mesh");
 	}
@@ -43,60 +43,51 @@ void Resources::InitResources()
 	{
 		SDL_Log("Failed to load tree mesh");
 	}
+
+	if(!Mesh::LoadMeshFromObjFile("asset/mesh/House.obj", this->houseMesh))
+	{
+		SDL_Log("Failed to load house mesh");
+	}
+		if(!Mesh::LoadMeshFromObjFile("asset/mesh/Selection.obj", this->selectionMesh))
+	{
+		SDL_Log("Failed to load selection mesh");
+	}
 }
 
-void Resources::DrawMesh(float dt)
+// MOVE to dedicated renderer
+void Resources::DrawMesh(float dt, const glm::mat4& projectionTimesView, const glm::vec3& worldCursorPos)
 {
-	float width = 1080.0f;
-	float height = 720.0f;
-
-	glm::vec3 cameraPos = glm::vec3(0.0f, 9.0f, 1.0f);
-	glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
-	glm::vec3 vectorToCamera = glm::normalize(cameraPos - cameraTarget);
-	glm::vec3 UP = glm::vec3(0.0f, 1.0, 0.0f);
-	glm::vec3 cameraRight = glm::normalize(glm::cross(UP, vectorToCamera));
-	glm::vec3 cameraUp = glm::cross(vectorToCamera, cameraRight);
-
-	glm::mat4 view = glm::lookAt(cameraPos, cameraTarget, cameraUp);
-	glm::mat4 projection = glm::perspective(glm::radians(45.0f), width / height, 0.1f, 200.0f);
-
-	// WOHOO
-	if(false)
+	// World
+	for (int y = 0; y < 5; y++)
 	{
-		// float x = (2.0f * mouse.x) / width - 1.0f;
-		// float y = 1.0f - (2.0f * mouse.y) / height;
-		
-		// glm::vec4 ray = {x, y, -1.0f, 1.0f};
-		// ray = glm::inverse(projection) * ray;
-		// ray.z = -1;
-		// ray.w = 0.0;
-		// SDL_Log("Ray eye : %s",glm::to_string(ray).c_str());
-
-		// glm::vec3 finalRay = glm::inverse(view) * ray;
-		// finalRay = glm::normalize(finalRay);
-		// SDL_Log("Ray vec : %s",glm::to_string(finalRay).c_str());
-		// // we use up as the ground place normal
-		// float terrainHeight = 0;
-		// float intersectionRange = -glm::dot(cameraPos,UP) + terrainHeight/ glm::dot(finalRay, UP);
-
-		// glm::vec3 intersectionPoint = cameraPos + finalRay * intersectionRange;
-		// SDL_Log("IntersectionPoint : %s",glm::to_string(intersectionPoint).c_str());
+		for (int x = 0; x < 5; x++)
+		{
+			
+			glm::mat4 transform = glm::translate(glm::mat4(1.0f), glm::vec3(x * 2, 0.0f, y * 2));
+			glm::mat4 final = projectionTimesView * transform;
+			this->flatShader.Select();
+			this->flatShader.SetMatrixUniform("transform", final);
+			this->paletteTexture.Select();
+			this->quadMesh.Select();
+			this->quadMesh.Draw();
+		}
 	}
 
-	// World
+	// Selection
 	{
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-		glm::mat4 final = projection * view * transform;
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), glm::vec3(worldCursorPos.x, 0.01f, worldCursorPos.z));
+		glm::mat4 final = projectionTimesView * transform;
 		this->flatShader.Select();
 		this->flatShader.SetMatrixUniform("transform", final);
 		this->paletteTexture.Select();
-		this->cubeMesh.Select();
-		this->cubeMesh.Draw();
+		this->selectionMesh.Select();
+		this->selectionMesh.Draw();
 	}
+	
 	// Tree
 	{
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		glm::mat4 final = projection * view * transform;
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+		glm::mat4 final = projectionTimesView * transform;
 		this->flatShader.Select();
 		this->flatShader.SetMatrixUniform("transform", final);
 		this->paletteTexture.Select();
@@ -107,8 +98,10 @@ void Resources::DrawMesh(float dt)
 
 void Resources::FreeResources()
 {
-	this->cubeMesh.Free();
+	this->quadMesh.Free();
 	this->treeMesh.Free();
+	this->houseMesh.Free();
+	this->selectionMesh.Free();
 
 	this->flatShader.Free();
 	this->flatShader.Free();

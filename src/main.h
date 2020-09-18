@@ -72,15 +72,20 @@ struct Texture
 enum class GameAction
 {
 	NONE,
-	WORLD_SELECT,
-	TEST,
+	WORLD_SELECT, 
+	TEST, // DO WE WANT TO HARD CODE EVERY THING?? make a class instead??
+	SCROLL_FORWARD,
+	SCROLL_BACK,
+	SCROLL_LEFT,
+	SCROLL_RIGHT,
+	FOCUS_ON, // SETING we may need arg
 	HARD_EXIT
 };
 
 struct GameInput{
 	GameAction action;
 	int x; int y; // used for tool tips and such
-	GameInput(GameAction b, int x, int y) : action{b}, x{x}, y{y}{}
+	GameInput(GameAction b, int x = 0, int y = 0) : action{b}, x{x}, y{y}{}
 };
 
 struct Interactable2D{
@@ -97,11 +102,13 @@ struct Interactable2D{
 		backgroundColor {bgc},foregroundColor {fgc} {}
 };
 
-// Just a group of handless
+// Just a group of handless, maybe become group of vectors in the future...
 struct Resources
 {
-	Mesh cubeMesh;
+	Mesh quadMesh;
 	Mesh treeMesh;
+	Mesh houseMesh;
+	Mesh selectionMesh;
 
 	Shader flatShader;
 	Shader textShader;
@@ -109,9 +116,13 @@ struct Resources
 	Texture paletteTexture;
 	Texture panelTexture;
 
+	// Helper ?? moveout to free func..!!!
 	void InitResources();
 	void FreeResources();
-	void DrawMesh(float dt);
+	
+	// remove
+	void DrawMesh(float dt, const glm::mat4& projectionTimesView,
+		const glm::vec3& worldCursorPos);
 };
 
 // Think about hiding this later...
@@ -157,9 +168,14 @@ class Game
 	Resources resources;
 	UIRenderer uiRenderer;
 
-	std::vector<GameInput> gameInputs; // i dont think there will be 50 apm ??
+	std::vector<GameInput> gameInputs; // Do we event need this to be a vector ..
 	std::vector<Interactable2D> interactable2D;
 	bool isRunning = false;
+
+	// TEMP
+	glm::vec2 cameraRigPos;
+	glm::vec3 intersectionPoint;
+
 public:
 	void Init();
 	void Run(const ApplicationState& appState);
