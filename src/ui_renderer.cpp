@@ -95,10 +95,10 @@ bool UIRenderer::Initialize(i32 width, i32 height)
 	return true;
 }
 
-void UIRenderer::RenderText(const Shader& shader, std::string& text, float x, float y, float scale, glm::vec3 color)
+void UIRenderer::RenderText(const Resources& resources, std::string& text, float x, float y, float scale, glm::vec3 color)
 {
-	shader.Select();
-	shader.Set3fUniform("textColor", color);
+	resources.textShader.Select();
+	resources.textShader.Set3fUniform("textColor", color);
 	this->uiMesh.Select();
 
 	// flip Y 
@@ -120,7 +120,7 @@ void UIRenderer::RenderText(const Shader& shader, std::string& text, float x, fl
         // // render glyph texture over quad
         glBindTexture(GL_TEXTURE_2D, ch.textureHandle);
 
-		shader.SetMatrixUniform("transform", this->projection * translate * transform);
+		resources.textShader.SetMatrixUniform("transform", this->projection * translate * transform);
 
 		glDrawElements(GL_TRIANGLES, 6 , GL_UNSIGNED_INT, 0);
         // now advance cursors for next glyph (note that advance is number of 1/64 pixels)
@@ -128,10 +128,10 @@ void UIRenderer::RenderText(const Shader& shader, std::string& text, float x, fl
 	}
 }
 
-void UIRenderer::RenderPanel(const Shader& shader,const Texture& texture, const SDL_Rect& rect, glm::vec3 color)
+void UIRenderer::RenderPanel(const Resources& resources, const SDL_Rect& rect, glm::vec3 color)
 {
-	shader.Select();
-	shader.Set3fUniform("textColor", color);
+	resources.textShader.Select();
+	resources.textShader.Set3fUniform("textColor", color);
 	this->uiMesh.Select();
 
 	float flippedY = this->windowHeight - rect.y - rect.h;
@@ -139,9 +139,9 @@ void UIRenderer::RenderPanel(const Shader& shader,const Texture& texture, const 
 	glm::mat4 transform = glm::scale(glm::mat4(1.0f), glm::vec3(rect.w, rect.h, 1.0f));
 	transform = glm::translate(glm::mat4(1.0f), glm::vec3(rect.x, flippedY, 1.0f)) * transform;
 
-	texture.Select();
+	resources.panelTexture.Select();
 
-	shader.SetMatrixUniform("transform", this->projection * transform);
+	resources.textShader.SetMatrixUniform("transform", this->projection * transform);
 
 	glDrawElements(GL_TRIANGLES, 6 , GL_UNSIGNED_INT, 0);
 }

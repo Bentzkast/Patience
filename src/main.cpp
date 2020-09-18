@@ -1,19 +1,8 @@
 #include "main.h"
 #include <glad/glad.h>
 
-static GameState g_gameState = {0};
+static Game* g_game = nullptr;
 static ApplicationState g_applicationState = {0};
-
-void MovePlayer(Player *player)
-{
-	SDL_Log("Player Moved to new location");
-	player->x += 1;
-}
-
-PlayerActionTable playerActionTable[] =
-	{
-		{"Move", MovePlayer}
-	};
 
 static int ShutDown()
 {
@@ -22,58 +11,6 @@ static int ShutDown()
 	SDL_QuitSubSystem(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
 	SDL_Quit();
 	return 0;
-}
-
-static Mouse g_mouse;
-
-static void PollEvent()
-{
-	SDL_Event event = {0};
-	g_mouse.click = false;
-	while (SDL_PollEvent(&event))
-	{
-		switch (event.type)
-		{
-		case SDL_KEYDOWN:
-		{
-			if (event.key.keysym.sym == SDLK_ESCAPE)
-			{
-				g_applicationState.isRunning = false;
-			}
-			if (event.key.keysym.sym == SDLK_F1)
-			{
-				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-			}
-			if (event.key.keysym.sym == SDLK_F2)
-			{
-				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-			}
-		}
-		case SDL_MOUSEBUTTONDOWN:
-		{
-			if(event.button.button == SDL_BUTTON_LEFT)
-			{
-				Mouse mouse { event.button.x, event.button.y };
-				g_mouse.x = event.button.x;
-				g_mouse.y = event.button.y;
-				SDL_Log("Left Click %d %d", mouse.x, mouse.y);
-				g_mouse.click = true;
-			}
-			if(event.button.button == SDL_BUTTON_RIGHT)
-			{
-				SDL_Log("Right Click");
-			}
-		}
-		break;
-		case SDL_QUIT: // X top right
-		{
-			g_applicationState.isRunning = false;
-		}
-		break;
-		default:
-			break;
-		}
-	}
 }
 
 static void SetOpenGlAttributes()
@@ -156,58 +93,11 @@ int main(int argc, char *argv[])
 	}
 
 	// Game State
-	g_gameState.resources = new Resources();
-	g_gameState.resources->InitResources();
-
-	// Game Runs!
-	u32 realTickElapsed = SDL_GetTicks();
-	constexpr float deltaTimeLimit = 0.05f;
-	g_applicationState.isRunning = true;
-
-	glEnable(GL_MULTISAMPLE); // AA?
-	glEnable(GL_CULL_FACE); // Face culling
-	while (g_applicationState.isRunning)
-	{
-		PollEvent();
-
-		while (!SDL_TICKS_PASSED(SDL_GetTicks(), realTickElapsed + 16))
-		{
-			if (!SDL_TICKS_PASSED(SDL_GetTicks(), realTickElapsed + 17))
-			{
-				SDL_Delay(1);
-			}
-		}
-		// Frame Upper Cap 60
-		float deltaTime = (SDL_GetTicks() - realTickElapsed) * 0.001f;
-		if (deltaTime > deltaTimeLimit)
-		{
-			deltaTime = deltaTimeLimit;
-		}
-
-		// Tick here
-
-		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		// Enable depth buffering/disable alpha blend
-		glEnable(GL_DEPTH_TEST);
-		glDisable(GL_BLEND);
-
-		glDepthFunc(GL_LESS);
-
-		g_gameState.resources->DrawMesh(deltaTime, g_mouse);
-
-		glDisable(GL_DEPTH_TEST);
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		g_gameState.resources->DrawText(g_mouse);
-
-		SDL_GL_SwapWindow(g_applicationState.sdlWindow);
-		realTickElapsed = SDL_GetTicks();
-	}
-
-	g_gameState.resources->FreeResources();
-	delete g_gameState.resources;
+	g_game = new Game();
+	g_game->Init(); // Check return value ?
+	g_game->Run(g_applicationState);
+	g_game->Free();
+	delete g_game;
 
 	return ShutDown();
 }

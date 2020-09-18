@@ -3,20 +3,11 @@
 #include <glm/glm.hpp>
 #include <string>
 #include <glad/glad.h>
+#include <vector>
 
 typedef uint64_t u64;
 typedef uint32_t u32;
 typedef int i32;
-
-// Priotize POD, class should be a module, not an "object"
-struct ApplicationState
-{
-	u32 windowWidth;
-	u32 windowHeight;
-	SDL_Window* sdlWindow;
-	SDL_GLContext sdlGLContext;
-	bool isRunning;
-};
 
 struct Mesh
 {
@@ -78,6 +69,51 @@ struct Texture
 	static bool CreateTexture(const char* texturePath, Texture& outTexture);
 };
 
+enum class GameAction
+{
+	NONE,
+	WORLD_SELECT,
+	TEST,
+	HARD_EXIT
+};
+
+struct GameInput{
+	GameAction action;
+	int x; int y; // used for tool tips and such
+	GameInput(GameAction b, int x, int y) : action{b}, x{x}, y{y}{}
+};
+
+struct Interactable2D{
+	SDL_Rect rect;
+	std::string name;
+	GameAction action;
+	glm::vec3 backgroundColor;
+	glm::vec3 foregroundColor;
+	// highlight color
+	// maybe has priotity layer latter..
+	Interactable2D(
+		SDL_Rect rect, const char* name, GameAction a, glm::vec3 bgc, glm::vec3 fgc) :
+		rect{rect}, name {name}, action { a },
+		backgroundColor {bgc},foregroundColor {fgc} {}
+};
+
+// Just a group of handless
+struct Resources
+{
+	Mesh cubeMesh;
+	Mesh treeMesh;
+
+	Shader flatShader;
+	Shader textShader;
+
+	Texture paletteTexture;
+	Texture panelTexture;
+
+	void InitResources();
+	void FreeResources();
+	void DrawMesh(float dt);
+};
+
 // Think about hiding this later...
 struct Character
 {
@@ -99,52 +135,33 @@ class UIRenderer
 public:
 	bool Initialize(i32 width, i32 height);
 	void SetWindowSize(i32 width, i32 height);
-	void RenderText(const Shader& shader, std::string& text, float x, float y, float scale, glm::vec3 color);
-	void RenderPanel(const Shader& shader,const Texture& texture, const SDL_Rect& rect, glm::vec3 color);
+	void RenderText(const Resources& resources, std::string& text, float x, float y, float scale, glm::vec3 color);
+	void RenderPanel(const Resources& resources, const SDL_Rect& rect, glm::vec3 color);
 	void Free();
 };
 
-struct Player
+
+// Priotize POD, class should be a module, not an "object"
+struct ApplicationState
 {
-	i32 x;
-	i32 y;
+	u32 windowWidth;
+	u32 windowHeight;
+	SDL_Window* sdlWindow;
+	SDL_GLContext sdlGLContext;
+	bool isRunning;
 };
 
-typedef void PlayerAction(Player* player);
-struct PlayerActionTable
+class Game
 {
-	const char* name;
-	const PlayerAction* action;
-};
+	// Fields
+	Resources resources;
+	UIRenderer uiRenderer;
 
-struct Mouse{
-	int x;
-	int y;
-	bool click;
-};
-
-// Interface Should be a class, class should never have public field
-// use POD instead for all public so all public or all private
-class Resources
-{
-	Mesh cubeMesh;
-	Mesh treeMesh;
-
-	Shader flatShader;
-	Shader textShader;
-
-	Texture paletteTexture;
-	Texture panelTexture;
-
-	UIRenderer textRenderer;
+	std::vector<GameInput> gameInputs; // i dont think there will be 50 apm ??
+	std::vector<Interactable2D> interactable2D;
+	bool isRunning = false;
 public:
-	void InitResources();
-	void FreeResources();
-	void DrawMesh(float dt, const Mouse& mouse);
-	void DrawText(const Mouse& mouse);
-};
-
-struct GameState
-{
-	Resources* resources;
+	void Init();
+	void Run(const ApplicationState& appState);
+	void Free();
 };

@@ -43,11 +43,9 @@ void Resources::InitResources()
 	{
 		SDL_Log("Failed to load tree mesh");
 	}
-
-	this->textRenderer.Initialize(1080, 720);
 }
 
-void Resources::DrawMesh(float dt, const Mouse& mouse)
+void Resources::DrawMesh(float dt)
 {
 	float width = 1080.0f;
 	float height = 720.0f;
@@ -63,26 +61,26 @@ void Resources::DrawMesh(float dt, const Mouse& mouse)
 	glm::mat4 projection = glm::perspective(glm::radians(45.0f), width / height, 0.1f, 200.0f);
 
 	// WOHOO
-	if(mouse.click)
+	if(false)
 	{
-		float x = (2.0f * mouse.x) / width - 1.0f;
-		float y = 1.0f - (2.0f * mouse.y) / height;
+		// float x = (2.0f * mouse.x) / width - 1.0f;
+		// float y = 1.0f - (2.0f * mouse.y) / height;
 		
-		glm::vec4 ray = {x, y, -1.0f, 1.0f};
-		ray = glm::inverse(projection) * ray;
-		ray.z = -1;
-		ray.w = 0.0;
-		SDL_Log("Ray eye : %s",glm::to_string(ray).c_str());
+		// glm::vec4 ray = {x, y, -1.0f, 1.0f};
+		// ray = glm::inverse(projection) * ray;
+		// ray.z = -1;
+		// ray.w = 0.0;
+		// SDL_Log("Ray eye : %s",glm::to_string(ray).c_str());
 
-		glm::vec3 finalRay = glm::inverse(view) * ray;
-		finalRay = glm::normalize(finalRay);
-		SDL_Log("Ray vec : %s",glm::to_string(finalRay).c_str());
-		// we use up as the ground place normal
-		float terrainHeight = 0;
-		float intersectionRange = -glm::dot(cameraPos,UP) + terrainHeight/ glm::dot(finalRay, UP);
+		// glm::vec3 finalRay = glm::inverse(view) * ray;
+		// finalRay = glm::normalize(finalRay);
+		// SDL_Log("Ray vec : %s",glm::to_string(finalRay).c_str());
+		// // we use up as the ground place normal
+		// float terrainHeight = 0;
+		// float intersectionRange = -glm::dot(cameraPos,UP) + terrainHeight/ glm::dot(finalRay, UP);
 
-		glm::vec3 intersectionPoint = cameraPos + finalRay * intersectionRange;
-		SDL_Log("IntersectionPoint : %s",glm::to_string(intersectionPoint).c_str());
+		// glm::vec3 intersectionPoint = cameraPos + finalRay * intersectionRange;
+		// SDL_Log("IntersectionPoint : %s",glm::to_string(intersectionPoint).c_str());
 	}
 
 	// World
@@ -107,33 +105,6 @@ void Resources::DrawMesh(float dt, const Mouse& mouse)
 	}
 }
 
-void Resources::DrawText(const Mouse& mouse)
-{
-	SDL_Rect rect{ 10, 10, 350, 50};
-	if(mouse.click)
-	{
-		SDL_Point mousePos{ mouse.x, mouse. y};
-		if(SDL_PointInRect(&mousePos, &rect))
-		{
-			SDL_Log("Click over!!");
-		}
-	}
-
-	this->textRenderer.RenderPanel(
-		this->textShader,
-		this->panelTexture,
-		rect,{0.25f, 0.25f, 0.25f}
-	);
-
-	std::string sampleText { "Patience Engine" };
-	// How big the text?
-	this->textRenderer.RenderText(
-		this->textShader,
-		sampleText,
-		15.0f, 10.0f, 1.0f,
-		{ 0.3, 0.7 , 0.9 });
-}
-
 void Resources::FreeResources()
 {
 	this->cubeMesh.Free();
@@ -144,7 +115,5 @@ void Resources::FreeResources()
 
 	this->paletteTexture.Free();
 	this->panelTexture.Free();
-	
-	this->textRenderer.Free();
 }
 
