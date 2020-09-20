@@ -11,7 +11,7 @@ struct Camera
 	glm::mat4 view;
 	glm::mat4 projection;
 
-	float scrollSpeed = 5.0f;
+	float scrollSpeed = 15.0f;
 	float fov = 45.0f;
 	float nearCull = 0.1f;
 	float farCull = 100.0f;
@@ -41,9 +41,9 @@ struct Camera
 
 		glm::vec3 zoomVec = glm::normalize(vectorToCamera) * (float)cameraDir.y;
 		glm::vec3 forwardVec = glm::vec3(zoomVec.x, 0, zoomVec.z);
-		glm::vec3 rightVec = cameraRight *  (float)cameraDir.x;
+		glm::vec3 rightVec = cameraRight * (float)cameraDir.x;
 		// STUPID wa need a math way
-		// TODO camera need to use local vector 
+		// TODO camera need to use local vector
 		rigPos += forwardVec * scrollSpeed * dt;
 		rigPos += rightVec * scrollSpeed * dt;
 
@@ -51,6 +51,6 @@ struct Camera
 		glm::vec3 cameraUp = glm::cross(vectorToCamera, cameraRight);
 
 		this->view = glm::lookAt(this->rigPos + this->offset, rigPos, cameraUp);
-		this->projection = glm::perspective(glm::radians(fov), width / height, nearCull ,farCull);
+		this->projection = glm::perspective(glm::radians(fov), width / height, nearCull, farCull);
 	}
 };
