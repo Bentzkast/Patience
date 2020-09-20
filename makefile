@@ -29,7 +29,7 @@ release-linux:
 	-lSDL2;
 
 debug-build-window:
-	g++ -g -Wall -std=c++11 -fno-exceptions -static-libgcc \
+	g++ -g -Wall -std=c++11 -fno-exceptions -static-libgcc -static-libstdc++ -lpthread \
 	./src/*.cpp \
 	-o target/window/game \
 	-Iexternal/GLAD/include external/GLAD/src/glad.c \
