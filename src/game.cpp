@@ -117,7 +117,7 @@ void Game::Run(const ApplicationState& appState)
 		// 	SDL_Log("RIGHT CLICK");
 		// }
 
-		glm::ivec2 cameraDir{ 0, 0};
+		glm::ivec2 cameraDir{ 0 , 0};
 		int rotDelta = 0;
 		if(inputSystem.IsHold(Forward))
 		{
@@ -210,7 +210,7 @@ void Game::Run(const ApplicationState& appState)
 		}
 		
 		char buff[20] {0};
-		snprintf(buff, sizeof(buff), "fps %.2f", 1 / deltaTime);
+		snprintf(buff, sizeof(buff), "deltaTime %.4f", deltaTime);
 		std::string buffAsStdStr = buff;	
 
 		this->uiRenderer.RenderText(
