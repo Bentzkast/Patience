@@ -1,4 +1,4 @@
-#include "main.h"
+#include "resources.h"
 #include <stb_image.h>
 
 void Texture::Free() const

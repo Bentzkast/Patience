@@ -1,5 +1,4 @@
-#include "main.h"
-#include <glad/glad.h>
+#include "resources.h"
 #include <glm/gtc/type_ptr.hpp>
 #include <fstream>
 #include <sstream>

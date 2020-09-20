@@ -1,10 +1,10 @@
-#include "main.h"
+#include "resources.h"
 #include <fstream>
 #include <sstream>
 #include <vector>
 #include <unordered_map>
 
-void Mesh::Select()const
+void Mesh::Select() const
 {
 	glBindVertexArray(this->vertexArrayHandle);
 }

@@ -1,4 +1,4 @@
-#include "main.h"
+#include "resources.h"
 
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/string_cast.hpp>
@@ -19,7 +19,6 @@ void Resources::InitResources()
 		{
 			SDL_Log("Failed to load text Shader");
 		}
-
 
 	if(!Texture::CreateTexture(
 		"asset/texture/Simple.png", this->paletteTexture
