@@ -6,17 +6,15 @@ void Game::Init()
 {
 	this->resources.InitResources();
 	this->uiRenderer.Initialize(1080, 720);
-	this->gameInputs.reserve(20);
-	this->interactable2D.reserve(30);
+	this->inputSystem.Init();
 	this->isRunning = true;
 
 
 	// temporary stuff
-	SDL_Rect rect{ 10, 10, 350, 50};
-	this->interactable2D.emplace_back(
-		rect, "Test", GameAction::TEST,
-		glm::vec3 {0.25f, 0.25f, 0.25f},
-		glm::vec3{ 0.3, 0.7 , 0.9 });
+	interactableUI[currentInteractableSize].rect = SDL_Rect { 10, 10, 350, 50};
+	interactableUI[currentInteractableSize].name = "Test Button";
+	interactableUI[currentInteractableSize].backgroundColor = {.3, .3, .3};
+	interactableUI[currentInteractableSize++].foregroundColor = {0.3f , 0.7f , 0.9f };
 }
 
 void Game::Free()
@@ -26,12 +24,10 @@ void Game::Free()
 }
 
 static void PollEvent(
-	const std::vector<Interactable2D>& interactable2D,
-	std::vector<GameInput>& outGameInput)
+	const Interactable2D* ,
+	InputSystem& inputSystem)
 {
 	SDL_Event event = {0};
-	outGameInput.clear();
-	bool isMouseIdle = true;
 	while (SDL_PollEvent(&event))
 	{
 		switch (event.type)
@@ -40,10 +36,6 @@ static void PollEvent(
 		{
 			switch (event.key.keysym.sym)
 			{
-			case SDLK_ESCAPE:
-			{
-				outGameInput.emplace_back(GameAction::HARD_EXIT);
-			} break;
 			case SDLK_F1:
 			{
 				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -52,73 +44,18 @@ static void PollEvent(
 			{
 				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			} break;
-			case SDLK_w:
-			{
-				outGameInput.emplace_back(GameAction::SCROLL_FORWARD);
-			} break;
-			case SDLK_s:
-			{	
-				outGameInput.emplace_back(GameAction::SCROLL_BACK);
-			} break;
-			case SDLK_a:
-			{
-				outGameInput.emplace_back(GameAction::SCROLL_LEFT);
-			} break;
-			case SDLK_d:
-			{
-				outGameInput.emplace_back(GameAction::SCROLL_RIGHT);
-			} break;
 			default:
 				break;
 			}
 		} break;
-		case SDL_MOUSEBUTTONDOWN:
-		{
-			isMouseIdle = false;
-			if(event.button.button == SDL_BUTTON_LEFT)
-			{
-				// if no overlap with any UI player is interacting with world,
-				GameAction action = GameAction::WORLD_SELECT;
-				// Select for overlap button
-				SDL_Point mousePoint { event.button.x, event.button.y };
-				// maybe has priotity layer latter.. now the latestone..
-				for (size_t i = 0; i < interactable2D.size(); i++)
-				{
-					if(SDL_PointInRect(&mousePoint, &interactable2D[i].rect))
-					{
-						action = interactable2D[i].action;
-					}
-				}
-
-				outGameInput.emplace_back(action, event.button.x, event.button.y);
-			}
-			if(event.button.button == SDL_BUTTON_RIGHT)
-			{
-				SDL_Log("Right Click");
-			}
-		}break;
-		case SDL_MOUSEMOTION:
-		{
-			isMouseIdle = false;
-		} break;
 		case SDL_QUIT: // X top right
 		{
-			outGameInput.emplace_back(GameAction::HARD_EXIT, 0, 0);
+			inputSystem.SetForceQuit();
 		}
 		break;
 		default:
 			break;
 		}
-	}
-	// TODO add idle timer??
-	if(isMouseIdle)
-	{
-		// Hover action
-		int x, y;
-		SDL_GetMouseState(&x, &y);
-		// LATER implement other game play element and see how to pass stuff
-		// after we hone down the 3d world interaction
-		outGameInput.emplace_back(GameAction::FOCUS_ON, x, y);
 	}
 }
 
@@ -132,16 +69,11 @@ void Game::Run(const ApplicationState& appState)
 	glEnable(GL_CULL_FACE); // Face culling
 	while (this->isRunning)
 	{
-		PollEvent(this->interactable2D, this->gameInputs);
+		PollEvent(this->interactableUI, inputSystem);
 
-		// Exit if there're a hard exit request
-		for (size_t i = 0; i < this->gameInputs.size(); i++)
+		if(inputSystem.IsReleased(Exit))
 		{
-			if(this->gameInputs[i].action == GameAction::HARD_EXIT)
-			{
-				this->isRunning = false;
-				break;
-			}
+			this->isRunning =false;
 		}
 		
 		while (!SDL_TICKS_PASSED(SDL_GetTicks(), realTickElapsed + 16))
@@ -160,44 +92,63 @@ void Game::Run(const ApplicationState& appState)
 
 		// Update Here --------------------------
 		// 3d world mouse
-		int mouseX = 0;
-		int mouseY = 0;
-		bool select = false;
-		for (size_t i = 0; i < this->gameInputs.size(); i++)
+		// Ray cast Object
+
+
+		// Mouse
+		bool isOverUI = false;
+		for (int i = 0; i < currentInteractableSize; i++)
 		{
-			switch (this->gameInputs[i].action)
-			{
-			case GameAction::TEST:
-			{
-				SDL_Log("TEST BUTTON SELECTED");
-			} break;
-			case GameAction::SCROLL_FORWARD:
-			{
-				cameraRigPos.y -= 1;
-			} break;
-			case GameAction::SCROLL_BACK:
-			{
-				cameraRigPos.y += 1;
-			} break;
-			case GameAction::SCROLL_RIGHT:
-			{
-				cameraRigPos.x += 1;
-			} break;
-			case GameAction::SCROLL_LEFT:
-			{
-				cameraRigPos.x -= 1;
-			} break;
-			case GameAction::WORLD_SELECT:
-			{
-				mouseX = this->gameInputs[i].x;
-				mouseY = this->gameInputs[i].y;
-				SDL_Log("%d %d", mouseX, mouseY);
-				select = true;
-			} break;		
-			default:
-				break;
+			if(SDL_PointInRect(&this->inputSystem.GetMousePos(),&interactableUI[i].rect)){
+				SDL_Log("Is over %s", interactableUI[i].name.c_str());
+				isOverUI = true;
 			}
 		}
+		
+		SDL_Point mousePos;
+		bool select = false;
+
+		if(inputSystem.IsPressed(LEFT_MOUSE) && !isOverUI){
+			SDL_Log("World Raycast!");
+			select = true;
+			mousePos = this->inputSystem.GetMousePos();
+		}
+		// if(inputSystem.IsPressed(RIGHT_MOUSE)){
+		// 	SDL_Log("RIGHT CLICK");
+		// }
+
+		glm::ivec2 cameraDir{ 0, 0};
+		int rotDelta = 0;
+		if(inputSystem.IsHold(Forward))
+		{
+			cameraDir.y = -1;
+		}
+		if(inputSystem.IsHold(Backward))
+		{
+			cameraDir.y = 1;
+		}
+		if(inputSystem.IsHold(Left))
+		{
+			cameraDir.x = -1;
+		}
+		if(inputSystem.IsHold(Right))
+		{
+			cameraDir.x = 1;
+		}
+		if(inputSystem.IsHold(RotateLeft))
+		{
+			rotDelta = -1;
+		}
+		else if(inputSystem.IsHold(RotateRight))
+		{
+			rotDelta = 1;
+		}
+
+		// Late Update Here ---------------------------------
+		float width = 1080.0f;
+		float height = 720.0f;
+		camera.LateUpdate(width, height, cameraDir, rotDelta, deltaTime);
+		inputSystem.LateUpdate();
 
 		// RENDER----------------------------
 		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
@@ -210,50 +161,41 @@ void Game::Run(const ApplicationState& appState)
 		glDepthFunc(GL_LESS);
 
 		// Draw World
-		float width = 1080.0f;
-		float height = 720.0f;
 
-		glm::vec3 cameraPos = glm::vec3(cameraRigPos.x, 10.0f, cameraRigPos.y + 10.f);
-		glm::vec3 cameraTarget = glm::vec3(cameraRigPos.x, 0.0f, cameraRigPos.y);
-		glm::vec3 vectorToCamera = glm::normalize(cameraPos - cameraTarget);
-		glm::vec3 UP = glm::vec3(0.0f, 1.0, 0.0f);
-		glm::vec3 cameraRight = glm::normalize(glm::cross(UP, vectorToCamera));
-		glm::vec3 cameraUp = glm::cross(vectorToCamera, cameraRight);
-
-		glm::mat4 view = glm::lookAt(cameraPos, cameraTarget, cameraUp);
-		glm::mat4 projection = glm::perspective(glm::radians(45.0f), width / height, 0.1f, 200.0f);
 
 		if(select) // maybe slower interfall ??? idk
 		{
-			float x = (2.0f * mouseX) / width - 1.0f;
-			float y = 1.0f - (2.0f * mouseY) / height;
+			float x = (2.0f * mousePos.x) / width - 1.0f;
+			float y = 1.0f - (2.0f * mousePos.y) / height;
 			
 			glm::vec4 ray = {x, y, -1.0f, 1.0f};
-			ray = glm::inverse(projection) * ray;
+			ray = glm::inverse(camera.projection) * ray;
 			ray.z = -1;
 			ray.w = 0.0;
 			SDL_Log("Ray eye : %s",glm::to_string(ray).c_str());
 
-			glm::vec3 finalRay = glm::inverse(view) * ray;
+			glm::vec3 finalRay = glm::inverse(this->camera.view) * ray;
 			finalRay = glm::normalize(finalRay);
 			SDL_Log("Ray vec : %s",glm::to_string(finalRay).c_str());
 			// we use up as the ground place normal
-			float intersectionRange = -glm::dot(cameraPos,UP)/ glm::dot(finalRay, UP);
+			float intersectionRange = 
+				-glm::dot(this->camera.GetCameraPos(),this->camera.UP) / glm::dot(finalRay, this->camera.UP);
 
-			intersectionPoint = cameraPos + finalRay * intersectionRange;
+			intersectionPoint = this->camera.GetCameraPos() + finalRay * intersectionRange;
 			intersectionPoint = glm::floor(intersectionPoint);
 			SDL_Log("IntersectionPoint : %s",glm::to_string(intersectionPoint).c_str());
 		}
 
-		resources.DrawMesh(deltaTime, projection * view, intersectionPoint);
+		resources.DrawMesh(deltaTime, this->camera.GetProjectionView(), intersectionPoint);
 
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		// DRAW Buttons
-		for(auto& ui : this->interactable2D)
+		for (int i = 0; i < currentInteractableSize; i++)
 		{
+			auto ui = interactableUI[i];
 			this->uiRenderer.RenderPanel(
 				this->resources,
 				ui.rect, ui.backgroundColor
@@ -266,6 +208,16 @@ void Game::Run(const ApplicationState& appState)
 				ui.rect.x, ui.rect.y, 1.0f,
 				ui.foregroundColor);
 		}
+		
+		char buff[20] {0};
+		snprintf(buff, sizeof(buff), "fps %.2f", 1 / deltaTime);
+		std::string buffAsStdStr = buff;	
+
+		this->uiRenderer.RenderText(
+		this->resources,
+		buffAsStdStr,
+		60, 60, 1.0f,
+		glm::vec3{ 0.3, 0.7 , 0.9 });
 		
 		SDL_GL_SwapWindow(appState.sdlWindow);
 		realTickElapsed = SDL_GetTicks();

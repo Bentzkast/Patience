@@ -2,38 +2,16 @@
 #include <string>
 #include <vector>
 #include "resources.h"
-
-enum class GameAction
-{
-	NONE,
-	WORLD_SELECT, 
-	TEST, // DO WE WANT TO HARD CODE EVERY THING?? make a class instead??
-	SCROLL_FORWARD,
-	SCROLL_BACK,
-	SCROLL_LEFT,
-	SCROLL_RIGHT,
-	FOCUS_ON, // SETING we may need arg
-	HARD_EXIT
-};
-
-struct GameInput{
-	GameAction action;
-	int x; int y; // used for tool tips and such
-	GameInput(GameAction b, int x = 0, int y = 0) : action{b}, x{x}, y{y}{}
-};
+#include "input_system.h"
+#include "camera.h"
 
 struct Interactable2D{
-	SDL_Rect rect;
-	std::string name;
-	GameAction action;
-	glm::vec3 backgroundColor;
-	glm::vec3 foregroundColor;
+	SDL_Rect rect { 0 };
+	std::string name {""};
+	glm::vec3 backgroundColor { 0 };
+	glm::vec3 foregroundColor { 0 };
 	// highlight color
 	// maybe has priotity layer latter..
-	Interactable2D(
-		SDL_Rect rect, const char* name, GameAction a, glm::vec3 bgc, glm::vec3 fgc) :
-		rect{rect}, name {name}, action { a },
-		backgroundColor {bgc},foregroundColor {fgc} {}
 };
 
 // Think about hiding this later...
@@ -73,18 +51,21 @@ struct ApplicationState
 	bool isRunning;
 };
 
+
+
 class Game
 {
 	// Fields
 	Resources resources;
 	UIRenderer uiRenderer;
 
-	std::vector<GameInput> gameInputs; // Do we event need this to be a vector ..
-	std::vector<Interactable2D> interactable2D;
+	InputSystem inputSystem;
+	static const int MAX_INTERACTABLE = 20;
+	int currentInteractableSize = 0;
+	Interactable2D interactableUI[MAX_INTERACTABLE];
 	bool isRunning = false;
-
+	Camera camera;
 	// TEMP
-	glm::vec2 cameraRigPos;
 	glm::vec3 intersectionPoint;
 
 public:
